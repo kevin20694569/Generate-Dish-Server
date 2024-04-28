@@ -1,10 +1,20 @@
 import { BlobLike } from "openai/uploads";
 import MySQLTableControllerBase from "./MySQLTableServiceBase";
 import { User, DishPreference, Complexity, Dish } from "./SQLModel";
-import { ResultSetHeader } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 class DishPreferenceModel extends MySQLTableControllerBase {
-  commonSelectString = `CONCAT( "${this.serverIP}/userimage/"), image_id) as user_imageurl, NULL AS password`;
+  selectPreferenceByUser_idOrderByTime = async (user_id: string, date: Date) => {
+    try {
+      let query = `SELECT * from dish_preference WHERE user_id = ? AND created_time < ? ORDER BY created_time DESC LIMIT 8`;
+      let params = [user_id, date];
+      let [result, fields] = await this.pool.query(query, params);
+      let preferences = result as RowDataPacket[];
+      return preferences[0];
+    } catch (error) {
+      throw error;
+    }
+  };
 
   insertDishPreference = async (
     id: string,

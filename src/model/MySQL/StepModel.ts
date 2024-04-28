@@ -3,9 +3,10 @@ import { DishStep } from "./SQLModel";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 class StepModel extends MySQLTableControllerBase {
+  commonSelectString = `CONCAT( "${this.serverIP}/stepimage/", image_id, ".jpg") as image_url`;
   selectStepsByDishID = async (dish_id: string) => {
     try {
-      let query = `SELECT *  from step WHERE dish_id = ? ORDER BY step_order`;
+      let query = `SELECT *, ${this.commonSelectString}  from step WHERE dish_id = ? ORDER BY step_order`;
       let params = [dish_id];
       let [RowDataPacket, fields] = await this.pool.query(query, params);
       return RowDataPacket as RowDataPacket;

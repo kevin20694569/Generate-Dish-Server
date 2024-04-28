@@ -1,6 +1,6 @@
 import MySQLTableControllerBase from "./MySQLTableServiceBase";
 import { Ingredient } from "./SQLModel";
-import { ResultSetHeader } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 class IngredientsModel extends MySQLTableControllerBase {
   insertIngredients = async (ingredients: Ingredient[]): Promise<ResultSetHeader> => {
@@ -14,6 +14,17 @@ class IngredientsModel extends MySQLTableControllerBase {
       let params = [arrayOfValues];
       let [header, fields] = await this.pool.query(query, params);
       return header as ResultSetHeader;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  selectIngredientsByDishID = async (dish_id: string) => {
+    try {
+      let query = `SELECT * from ingredient WHERE dish_id = ?`;
+      let params = [dish_id];
+      let [result, fields] = await this.pool.query(query, params);
+      return result as RowDataPacket;
     } catch (error) {
       throw error;
     }

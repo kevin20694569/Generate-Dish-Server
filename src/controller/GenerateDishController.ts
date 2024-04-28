@@ -116,7 +116,7 @@ class GenerateDishController extends BaseController {
                     description: "菜色複雜度",
                   },
                 },
-                required: ["title", "summary", "costtime", "cuisine", "complexity"],
+                required: ["name", "summary", "costtime", "cuisine", "complexity"],
               },
             },
           },
@@ -179,8 +179,8 @@ class GenerateDishController extends BaseController {
       if (stepArray.length > 0) {
         throw new Error("此Dish已經生成過Detail");
       }
-      let dishResults = await this.dishModel.selectDishByDishID(dish_id);
-      let { name, cuisine, preference_id, user_id, created_time, summary, costtime, complexity, image_id } = dishResults[0];
+      let dishResult = await this.dishModel.selectDishByDishID(dish_id);
+      let { name, cuisine, preference_id, user_id, created_time, summary, costtime, complexity, image_id } = dishResult;
       let model = "gpt-3.5-turbo-1106";
       let userContent = `我想要做${name}，時間要在${costtime}內，難易度為${complexity}，製作概要為${summary}，生成${maxsteps}步以內的烹飪步驟，製作${quantity}人份`;
       let jsonReq = {
@@ -199,6 +199,7 @@ class GenerateDishController extends BaseController {
                     description: "此步驟解釋",
                   },
                 },
+                required: ["description"],
               },
             },
             needingredients: {
@@ -215,6 +216,7 @@ class GenerateDishController extends BaseController {
                     description: "原料食材份量(單位為公克，調味料以湯匙計算)",
                   },
                 },
+                required: ["name", "quantity"],
               },
             },
           },
@@ -291,7 +293,9 @@ class GenerateDishController extends BaseController {
         steps: steps,
         needingredients: jsonResults.needingredients,
       };
+
       res.json(jsonObject);
+      await this.dishModel.updateDishDetailStatus(dish_id, true);
     } catch (error: any) {
       res.status(400);
       res.json({ err: error.message });
