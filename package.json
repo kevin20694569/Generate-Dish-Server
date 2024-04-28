@@ -1,0 +1,45 @@
+{
+  "name": "foodserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "www.ts",
+  "scripts": {
+    "start": "cross-env NODE_ENV=production nodemon --exec \"tsc && node  ./dist/bin/www\" --watch src --ext ts, js, json",
+    "start:dev": "cross-env NODE_ENV=development nodemon --exec \"tsc && node ./dist/bin/www\" --watch src --ext ts, js, json",
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "-": "^0.0.1",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/multer": "^1.4.11",
+    "@types/nanoid": "^3.0.0",
+    "base64json": "^1.0.3",
+    "bcrypt": "^5.1.1",
+    "clarifai-nodejs-grpc": "^10.2.1",
+    "cross": "^1.0.0",
+    "env": "^0.0.2",
+    "express": "^4.19.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.9.7",
+    "nanoid": "^3.3.7",
+    "node-fetch": "^2.6.1",
+    "openai": "^4.29.2",
+    "webpack": "^5.91.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.11.30",
+    "concurrently": "^8.2.2",
+    "cross-env": "^6.0.3",
+    "dotenv": "^16.4.5",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.3"
+  }
+}
