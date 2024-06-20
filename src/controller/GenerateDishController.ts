@@ -104,7 +104,11 @@ class GenerateDishController extends BaseController {
                   },
                   summary: {
                     type: "string",
-                    description: "菜色簡易製作流程",
+                    description: "菜色製作流程，大約100字內",
+                  },
+                  imagePrompt: {
+                    type: "string",
+                    description: "生成該菜色成品生成圖片Prompt，要有攝影技巧描述",
                   },
                   costtime: {
                     type: "string",
@@ -121,7 +125,7 @@ class GenerateDishController extends BaseController {
                     description: "菜色複雜度",
                   },
                 },
-                required: ["name", "summary", "costtime", "cuisine", "prompt", "complexity"],
+                required: ["name", "summary", "imagePrompt", "costtime", "cuisine", "complexity"],
               },
             },
           },
@@ -146,9 +150,8 @@ class GenerateDishController extends BaseController {
       };
       let jsonResults: OpenAIDishJson[] = JSON.parse(resMessage as string).dishes as OpenAIDishJson[];
       let promises = jsonResults.map(async (result) => {
-        //let data = await this.generateImageController.generateDishImage(result.name, result.cuisine, result.summary);
-        let data = await this.generateImageController.generateDishImageBySD(result.name, result.prompt);
-        let buffer = this.mediaController.convertBase64ToBuffer(data);
+        let b64_json = await this.generateImageController.generateDishImage(result.name, result.cuisine, result.imagePrompt);
+        let buffer = this.mediaController.convertBase64ToBuffer(b64_json);
         let dish_id = nanoid();
         await this.mediaController.uploadDishImage(buffer, dish_id);
         let dish: Dish = {
@@ -161,11 +164,15 @@ class GenerateDishController extends BaseController {
           costtime: result.costtime,
           complexity: result.complexity,
           image_id: dish_id,
+          imageprompt: result.imagePrompt,
         };
         return dish;
       });
       let dishes = await Promise.all(promises);
       await this.dishModel.insertDishes(dishes);
+      dishes.forEach((dish) => {
+        dish.image_url = `${this.imageServerPrefix}/dishimage/${dish.image_id}.jpg`;
+      });
       jsonData.dishes = dishes;
       res.json(jsonData);
     } catch (error) {
@@ -204,8 +211,12 @@ class GenerateDishController extends BaseController {
                     type: "string",
                     description: "此步驟解釋",
                   },
+                  generateImagePrompt: {
+                    type: "string",
+                    description: "生成該步驟圖片的詳細Prompt，要有攝影技巧描述",
+                  },
                 },
-                required: ["description"],
+                required: ["description", "generateImagePrompt"],
               },
             },
             needingredients: {
@@ -250,13 +261,12 @@ class GenerateDishController extends BaseController {
       let choiceMessage = choice.message.function_call?.arguments;
 
       interface OpenAIGenerateDishDetailJson {
-        steps: { description: string }[];
+        steps: { description: string; generateImagePrompt: string }[];
         needingredients: { name: string; quantity: string }[];
       }
       let jsonResults = JSON.parse(choiceMessage as string) as OpenAIGenerateDishDetailJson;
-
       let promises = jsonResults.steps.map(async (result, index) => {
-        let b64_json = await this.generateImageController.generateDishStepImage(name, result.description);
+        let b64_json = await this.generateImageController.generateDishStepImage(name, result.generateImagePrompt);
         let buffer = this.mediaController.convertBase64ToBuffer(b64_json);
         let step_id = nanoid();
 
@@ -265,6 +275,7 @@ class GenerateDishController extends BaseController {
           id: step_id,
           step_order: index,
           description: result.description,
+          imageprompt: result.generateImagePrompt,
           image_id: step_id,
           dish_id: dish_id,
         };
@@ -275,7 +286,7 @@ class GenerateDishController extends BaseController {
       let steps = await Promise.all(promises);
       let stepHeader = await this.stepModel.insertSteps(steps);
       if (stepHeader.serverStatus != 2) {
-        throw new Error("insert step Fail");
+        throw new Error("Insert step fail");
       }
       let ingredients = jsonResults.needingredients.map((needingredient, order_index) => {
         let ingredient_id = nanoid();
@@ -289,19 +300,21 @@ class GenerateDishController extends BaseController {
         return ingredient;
       });
       let ingredientHeader = await this.ingredientsModel.insertIngredients(ingredients);
+
       if (ingredientHeader.serverStatus != 2) {
         throw new Error("insert ingredients Fail");
       }
-
+      steps.forEach((step) => {
+        step.image_url = `${this.imageServerPrefix}/stepimage/${step.id}.jpg`;
+      });
       let jsonObject = {
         created: response["created"],
         usage: response["usage"],
         steps: steps,
         needingredients: jsonResults.needingredients,
       };
-
-      res.json(jsonObject);
       await this.dishModel.updateDishDetailStatus(dish_id, true);
+      res.json(jsonObject);
     } catch (error: any) {
       res.status(400);
       res.json({ err: error.message });

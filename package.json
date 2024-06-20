@@ -4,7 +4,7 @@
   "description": "",
   "main": "www.ts",
   "scripts": {
-    "start": "cross-env NODE_ENV=production nodemon --exec \"tsc && node  ./dist/bin/www\" --watch src --ext ts, js, json",
+    "start": "tsc && node ./dist/bin/www",
     "start:dev": "cross-env NODE_ENV=development nodemon --exec \"tsc && node ./dist/bin/www\" --watch src --ext ts, js, json",
     "build": "tsc"
   },

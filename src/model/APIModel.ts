@@ -10,6 +10,7 @@ interface OpenAiDishJsonResponse {
   prompt: string;
   complexity: string;
   image_url?: string;
+  imagePrompt: string;
 }
 interface StepResponse {
   description: string;

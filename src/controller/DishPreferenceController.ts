@@ -13,6 +13,7 @@ class DishPreferenceController extends BaseController {
     }
     let preferences = await this.dishPreferenceModel.selectPreferenceByUser_idOrderByTime(user_id, dateObject);
     res.json(preferences);
+    res.end();
   };
 }
 

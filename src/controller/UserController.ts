@@ -20,7 +20,6 @@ class UserController extends BaseController {
           email: email,
           name: user,
         };
-
         const expiresIn = "1h";
         const token = jwt.sign(payload, this.key, { expiresIn });
         res.setHeader("JwtToken", token);

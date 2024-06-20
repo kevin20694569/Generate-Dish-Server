@@ -3,6 +3,7 @@ import DishPreferenceModel from "../model/MySQL/DishPreferenceModel";
 import DishModel from "../model/MySQL/DishModel";
 import StepModel from "../model/MySQL/StepModel";
 import IngredientsModel from "../model/MySQL/IngredientsModel";
+
 import MediaController from "./MediaController";
 abstract class BaseController {
   protected userModel = new UserModel();
@@ -10,6 +11,7 @@ abstract class BaseController {
   protected dishModel = new DishModel();
   protected stepModel = new StepModel();
   protected ingredientsModel = new IngredientsModel();
+  protected imageServerPrefix = process.env.serverIP;
 }
 
 export default BaseController;

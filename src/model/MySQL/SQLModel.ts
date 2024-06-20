@@ -33,6 +33,7 @@ interface Dish {
   image_id: string;
   created_time?: string;
   image_url?: string;
+  imageprompt: string;
   image_buffer?: string;
   image_b64_json?: string;
 }
@@ -41,6 +42,8 @@ interface DishStep {
   id: string;
   step_order: number;
   description: string;
+  imageprompt: string;
+  image_url?: string;
   image_id: string;
   dish_id: string;
   created_time?: string;

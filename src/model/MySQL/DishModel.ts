@@ -18,6 +18,18 @@ class DishModel extends MySQLTableControllerBase {
     }
   };
 
+  selectDishesByUserID = async (user_id: string) => {
+    try {
+      let query = `SELECT *, ${this.commonSelectString} from dish WHERE user_id = ?`;
+      let params = [user_id];
+      let [results, fields] = await this.pool.query(query, params);
+      results = results as RowDataPacket[];
+      return results;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   insertDish = async (dish: Dish): Promise<ResultSetHeader> => {
     try {
       let { id, name, cuisine, preference_id, user_id, summary, costtime, complexity, image_id: resource_id } = dish;
@@ -36,7 +48,7 @@ class DishModel extends MySQLTableControllerBase {
         return Object.values(dish);
       });
 
-      let query = `INSERT INTO dish (id, name, cuisine, preference_id, user_id, summary, costtime, complexity, image_id)
+      let query = `INSERT INTO dish (id, name, cuisine, preference_id, user_id, summary, costtime, complexity, image_id, imageprompt)
       VALUES ?`;
       let params = [arrayOfValues];
       let [header, fields] = await this.pool.query(query, params);

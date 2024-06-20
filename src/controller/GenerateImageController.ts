@@ -13,12 +13,12 @@ class GenerateImageController extends BaseController {
   mediaController: MediaController = new MediaController();
   openAIAPIKey = process.env.openAIAPIKey as string;
   protected openaiClient = new OpenAI({ apiKey: this.openAIAPIKey });
-  generateDishImage = async (name: string, cuisine: string, summary: string): Promise<string> => {
-    let prompt = `產生${name}, 此菜色為${cuisine}料理, 做法為${summary}, 貼切真實世界模樣`;
+  generateDishImage = async (name: string, cuisine: string, imagePrompt: string): Promise<string> => {
+    let prompt = `生成${name}菜色圖片, 此菜色為${cuisine}料理, prompt為${imagePrompt}為，合理可食用的菜餚`;
     const result = await this.openaiClient.images.generate({
-      model: "dall-e-2",
+      model: "dall-e-3",
       prompt: prompt,
-      size: "256x256",
+      size: "1024x1024",
       n: 1,
       response_format: "b64_json",
       style: "natural",
@@ -27,11 +27,11 @@ class GenerateImageController extends BaseController {
   };
 
   generateDishStepImage = async (dishName: string, description: string): Promise<string> => {
-    let prompt = `生成${description}的步驟圖片，在廚房製作，貼切真實世界模樣`;
+    let prompt = `生成${description}`;
     const result = await this.openaiClient.images.generate({
-      model: "dall-e-2",
+      model: "dall-e-3",
       prompt: prompt,
-      size: "256x256",
+      size: "1024x1024",
       n: 1,
       response_format: "b64_json",
       style: "natural",

@@ -29,6 +29,17 @@ class IngredientsModel extends MySQLTableControllerBase {
       throw error;
     }
   };
+
+  selectIngredientsByDishIDs = async (dish_ids: string[]) => {
+    try {
+      let query = `SELECT * from ingredient WHERE dish_id in (?)`;
+      let params = [dish_ids];
+      let [result, fields] = await this.pool.query(query, params);
+      return result as RowDataPacket[];
+    } catch (error) {
+      throw error;
+    }
+  };
 }
 
 export default IngredientsModel;

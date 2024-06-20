@@ -39,7 +39,6 @@ class RecogniseImageController extends BaseController {
 
     const USER_ID = "clarifai";
     const APP_ID = "main";
-
     const MODEL_ID = "food-item-recognition";
     const MODEL_VERSION_ID = "1d5fd481e0cf4826aa72ec3ff049e044";
 
