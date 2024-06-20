@@ -5,6 +5,8 @@ class RemoteServiceRoute extends Route {
     this.router.post("/recogniseimages", this.recogniseImageController.recogniseImages);
     this.router.post("/generatedishes", this.generateDishController.generateDishes);
     this.router.post("/generateddishdetail", this.generateDishController.generateDishDetail);
+
+    this.router.post("/generateDishImageBySD", this.generateImageController.generateDishImageAPIBySD);
   }
 }
 

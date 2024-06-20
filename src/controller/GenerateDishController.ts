@@ -110,13 +110,18 @@ class GenerateDishController extends BaseController {
                     type: "string",
                     description: "大約花費時間",
                   },
+                  prompt: {
+                    type: "string",
+                    description:
+                      "A generating image prompt by english. Example: `RAW photo, waffles, foodphoto, dslr, soft lighting, high quality, film grain, Fujifilm XT`",
+                  },
                   complexity: {
                     type: "string",
                     enum: ["簡單", "普通", "困難"],
                     description: "菜色複雜度",
                   },
                 },
-                required: ["name", "summary", "costtime", "cuisine", "complexity"],
+                required: ["name", "summary", "costtime", "cuisine", "prompt", "complexity"],
               },
             },
           },
@@ -141,8 +146,9 @@ class GenerateDishController extends BaseController {
       };
       let jsonResults: OpenAIDishJson[] = JSON.parse(resMessage as string).dishes as OpenAIDishJson[];
       let promises = jsonResults.map(async (result) => {
-        let b64_json = await this.generateImageController.generateDishImage(result.name, result.cuisine, result.summary);
-        let buffer = this.mediaController.convertBase64ToBuffer(b64_json);
+        //let data = await this.generateImageController.generateDishImage(result.name, result.cuisine, result.summary);
+        let data = await this.generateImageController.generateDishImageBySD(result.name, result.prompt);
+        let buffer = this.mediaController.convertBase64ToBuffer(data);
         let dish_id = nanoid();
         await this.mediaController.uploadDishImage(buffer, dish_id);
         let dish: Dish = {
