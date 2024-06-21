@@ -6,6 +6,8 @@ import { OpenAiDishJsonResponse as OpenAIDishJson } from "../model/APIModel";
 import BaseController from "./BaseController";
 import { nanoid } from "nanoid";
 import MediaController from "./MediaController";
+import path from "path";
+import fs from "fs";
 
 class GenerateDishController extends BaseController {
   openAIAPIKey = process.env.openAIAPIKey as string;
@@ -106,18 +108,14 @@ class GenerateDishController extends BaseController {
                     type: "string",
                     description: "菜色製作流程，大約100字內",
                   },
-                  imagePrompt: {
-                    type: "string",
-                    description: "生成該菜色成品生成圖片Prompt，要有攝影技巧描述",
-                  },
                   costtime: {
                     type: "string",
                     description: "大約花費時間",
                   },
-                  prompt: {
+                  imageprompt: {
                     type: "string",
                     description:
-                      "A generating image prompt by english. Example: `RAW photo, waffles, foodphoto, dslr, soft lighting, high quality, film grain, Fujifilm XT`",
+                      "A generating image prompt which on the basis of self summary and propably food ingredient by english. Example : `RAW photo, stir-fried beef with cabbage, foodphoto, dslr, vibrant colors, high quality, sizzling dish, wok cooking, Asian cuisine, fresh vegetables, juicy beef slices, soft natural lighting, detailed close-up, Fujifilm XT, realistic textures, steam rising, savory and delicious`",
                   },
                   complexity: {
                     type: "string",
@@ -125,13 +123,22 @@ class GenerateDishController extends BaseController {
                     description: "菜色複雜度",
                   },
                 },
-                required: ["name", "summary", "imagePrompt", "costtime", "cuisine", "complexity"],
+                required: ["name", "summary", "imageprompt", "costtime", "cuisine", "complexity"],
               },
             },
           },
           required: ["dishes"],
         },
       };
+      /* let dish_id = nanoid();
+
+      const filePath = path.join(__dirname, "../../public/dishimage/8PaDnMChAISJMOcX4XCrl.jpg");
+      console.log(filePath);
+      const buffer = fs.readFileSync(filePath);
+
+      await this.mediaController.uploadDishImageToS3(buffer, dish_id);
+      res.end();
+      return;*/
       let functions = [jsonReq];
       const response = await this.openaiClient.chat.completions.create({
         model: model,
@@ -150,9 +157,14 @@ class GenerateDishController extends BaseController {
       };
       let jsonResults: OpenAIDishJson[] = JSON.parse(resMessage as string).dishes as OpenAIDishJson[];
       let promises = jsonResults.map(async (result) => {
-        let b64_json = await this.generateImageController.generateDishImage(result.name, result.cuisine, result.imagePrompt);
-        let buffer = this.mediaController.convertBase64ToBuffer(b64_json);
+        let dataString = await this.generateImageController.generateImageBySD(result.name, result.imageprompt);
+        //let dataString = await this.generateImageController.generateImageBySD(result.name, result.imageprompt);
+        //let b64_json = await this.generateImageController.generateDishImage(result.name, result.cuisine, result.imageprompt);
+        let buffer = this.mediaController.convertBase64ToBuffer(dataString);
+
         let dish_id = nanoid();
+
+        await this.mediaController.uploadDishImageToS3(buffer, dish_id);
         await this.mediaController.uploadDishImage(buffer, dish_id);
         let dish: Dish = {
           id: dish_id,
@@ -164,7 +176,7 @@ class GenerateDishController extends BaseController {
           costtime: result.costtime,
           complexity: result.complexity,
           image_id: dish_id,
-          imageprompt: result.imagePrompt,
+          imageprompt: result.imageprompt,
         };
         return dish;
       });
@@ -211,12 +223,13 @@ class GenerateDishController extends BaseController {
                     type: "string",
                     description: "此步驟解釋",
                   },
-                  generateImagePrompt: {
+                  imageprompt: {
                     type: "string",
-                    description: "生成該步驟圖片的詳細Prompt，要有攝影技巧描述",
+                    description:
+                      "A generating image of step prompt which on the basis of self description by english. Example : `RAW photo, cutting beef, food preparation, chef's knife, wooden cutting board, kitchen setting, professional chef, detailed close-up, high quality, soft natural lighting, shallow depth of field, Fujifilm XT, rich colors, realistic textures, cinematic feel",
                   },
                 },
-                required: ["description", "generateImagePrompt"],
+                required: ["description", "imageprompt"],
               },
             },
             needingredients: {
@@ -261,21 +274,22 @@ class GenerateDishController extends BaseController {
       let choiceMessage = choice.message.function_call?.arguments;
 
       interface OpenAIGenerateDishDetailJson {
-        steps: { description: string; generateImagePrompt: string }[];
+        steps: { description: string; imageprompt: string }[];
         needingredients: { name: string; quantity: string }[];
       }
       let jsonResults = JSON.parse(choiceMessage as string) as OpenAIGenerateDishDetailJson;
       let promises = jsonResults.steps.map(async (result, index) => {
-        let b64_json = await this.generateImageController.generateDishStepImage(name, result.generateImagePrompt);
-        let buffer = this.mediaController.convertBase64ToBuffer(b64_json);
+        let dataString = await this.generateImageController.generateImageBySD(name, result.imageprompt);
+        // let b64_json = await this.generateImageController.generateDishStepImage(name, result.imageprompt);
+        let buffer = this.mediaController.convertBase64ToBuffer(dataString);
         let step_id = nanoid();
-
-        let fileName = await this.mediaController.uploadDishStepImage(buffer, step_id);
+        await this.mediaController.uploadStepImageToS3(buffer, step_id);
+        //await this.mediaController.uploadDishStepImage(buffer, step_id);
         let step: DishStep = {
           id: step_id,
           step_order: index,
           description: result.description,
-          imageprompt: result.generateImagePrompt,
+          imageprompt: result.imageprompt,
           image_id: step_id,
           dish_id: dish_id,
         };

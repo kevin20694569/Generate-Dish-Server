@@ -11,7 +11,7 @@ abstract class BaseController {
   protected dishModel = new DishModel();
   protected stepModel = new StepModel();
   protected ingredientsModel = new IngredientsModel();
-  protected imageServerPrefix = process.env.serverIP;
+  protected imageServerPrefix = process.env.S3ImageURL;
 }
 
 export default BaseController;

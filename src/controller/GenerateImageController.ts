@@ -1,15 +1,12 @@
 import OpenAI from "openai";
-import { OpenAiDishJsonResponse, StepResponse } from "../model/APIModel";
 import BaseController from "./BaseController";
-import axios, { responseEncoding } from "axios";
-import { Dish } from "../model/MySQL/SQLModel";
-import { resolve } from "path";
+import axios from "axios";
 import { Request, Response, NextFunction } from "express";
-import { error } from "console";
 import MediaController from "./MediaController";
 import { nanoid } from "nanoid";
 
 class GenerateImageController extends BaseController {
+  std_url: string = process.env.std_url as string;
   mediaController: MediaController = new MediaController();
   openAIAPIKey = process.env.openAIAPIKey as string;
   protected openaiClient = new OpenAI({ apiKey: this.openAIAPIKey });
@@ -41,30 +38,30 @@ class GenerateImageController extends BaseController {
 
   generateDishImageAPIBySD = async (req: Request, res: Response, next: NextFunction) => {
     let { dishname, description } = req.body;
-    let data = await this.generateDishImageBySD(dishname, description);
+    let data = await this.generateImageBySD(dishname, description);
     let buffer = this.mediaController.convertBase64ToBuffer(data);
     let dish_id = nanoid();
     await this.mediaController.uploadDishImage(buffer, dish_id);
     res.end();
   };
 
-  generateDishImageBySD = async (dishName: string, prompt: string): Promise<string> => {
+  generateImageBySD = async (dishName: string, prompt: string): Promise<string> => {
     let override_settings: any = {};
     override_settings["sd_model_checkpoint"] = "v1-5-pruned";
     let reqBody = {
       prompt: prompt + ", <lora:foodphoto:0.8>",
       negative_prompt: "easynegative",
-      steps: 30,
-      width: 512,
-      height: 512,
-      cfg_scale: 7,
+      steps: 25,
+      width: 256,
+      height: 256,
+      cfg_scale: 10,
       seed: -1,
       sampler_index: "Euler a",
       override_settings: override_settings,
       override_settings_restore_afterwards: false,
     };
     try {
-      let url = "http://127.0.0.1:7860/sdapi/v1/txt2img";
+      let url = `${this.std_url}/sdapi/v1/txt2img`;
 
       let res = await axios.post(url, reqBody);
 
