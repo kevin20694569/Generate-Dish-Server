@@ -6,8 +6,6 @@ import { OpenAiDishJsonResponse as OpenAIDishJson } from "../model/APIModel";
 import BaseController from "./BaseController";
 import { nanoid } from "nanoid";
 import MediaController from "./MediaController";
-import path from "path";
-import fs from "fs";
 
 class GenerateDishController extends BaseController {
   openAIAPIKey = process.env.openAIAPIKey as string;
