@@ -128,15 +128,6 @@ class GenerateDishController extends BaseController {
           required: ["dishes"],
         },
       };
-      /* let dish_id = nanoid();
-
-      const filePath = path.join(__dirname, "../../public/dishimage/8PaDnMChAISJMOcX4XCrl.jpg");
-      console.log(filePath);
-      const buffer = fs.readFileSync(filePath);
-
-      await this.mediaController.uploadDishImageToS3(buffer, dish_id);
-      res.end();
-      return;*/
       let functions = [jsonReq];
       const response = await this.openaiClient.chat.completions.create({
         model: model,
@@ -155,7 +146,7 @@ class GenerateDishController extends BaseController {
       };
       let jsonResults: OpenAIDishJson[] = JSON.parse(resMessage as string).dishes as OpenAIDishJson[];
       let promises = jsonResults.map(async (result) => {
-        let dataString = await this.generateImageController.generateImageBySD(result.name, result.imageprompt);
+        let dataString = await this.generateImageController.generateImageBySD(result.imageprompt, result.name);
         //let dataString = await this.generateImageController.generateImageBySD(result.name, result.imageprompt);
         //let b64_json = await this.generateImageController.generateDishImage(result.name, result.cuisine, result.imageprompt);
         let buffer = this.mediaController.convertBase64ToBuffer(dataString);
@@ -181,7 +172,7 @@ class GenerateDishController extends BaseController {
       let dishes = await Promise.all(promises);
       await this.dishModel.insertDishes(dishes);
       dishes.forEach((dish) => {
-        dish.image_url = `${this.imageServerPrefix}/dishimage/${dish.image_id}.jpg`;
+        dish.image_url = `${this.dishImageServerPrefix}/${dish.image_id}`;
       });
       jsonData.dishes = dishes;
       res.json(jsonData);
@@ -277,7 +268,7 @@ class GenerateDishController extends BaseController {
       }
       let jsonResults = JSON.parse(choiceMessage as string) as OpenAIGenerateDishDetailJson;
       let promises = jsonResults.steps.map(async (result, index) => {
-        let dataString = await this.generateImageController.generateImageBySD(name, result.imageprompt);
+        let dataString = await this.generateImageController.generateImageBySD(result.imageprompt);
         // let b64_json = await this.generateImageController.generateDishStepImage(name, result.imageprompt);
         let buffer = this.mediaController.convertBase64ToBuffer(dataString);
         let step_id = nanoid();
@@ -317,7 +308,7 @@ class GenerateDishController extends BaseController {
         throw new Error("insert ingredients Fail");
       }
       steps.forEach((step) => {
-        step.image_url = `${this.imageServerPrefix}/stepimage/${step.id}.jpg`;
+        step.image_url = `${this.stepImageServerPrefix}/${step.id}`;
       });
       let jsonObject = {
         created: response["created"],

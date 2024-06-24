@@ -39,14 +39,19 @@ class GenerateImageController extends BaseController {
   generateDishImageAPIBySD = async (req: Request, res: Response, next: NextFunction) => {
     let { dishname, description } = req.body;
     let data = await this.generateImageBySD(dishname, description);
+    console.log(data);
     let buffer = this.mediaController.convertBase64ToBuffer(data);
     let dish_id = nanoid();
     await this.mediaController.uploadDishImage(buffer, dish_id);
     res.end();
   };
 
-  generateImageBySD = async (dishName: string, prompt: string): Promise<string> => {
+  generateImageBySD = async (prompt: string, title?: string): Promise<string> => {
     let override_settings: any = {};
+    if (title) {
+      prompt = title + prompt;
+    }
+
     override_settings["sd_model_checkpoint"] = "v1-5-pruned";
     let reqBody = {
       prompt: prompt + ", <lora:foodphoto:0.8>",
@@ -60,14 +65,16 @@ class GenerateImageController extends BaseController {
       override_settings: override_settings,
       override_settings_restore_afterwards: false,
     };
+    let body = {
+      prompt: prompt,
+    };
     try {
-      let url = `${this.std_url}/sdapi/v1/txt2img`;
+      let url = `${this.std_url}/generate`;
 
-      let res = await axios.post(url, reqBody);
+      let res = await axios.post(url, body);
 
       let data = res.data;
-      let { images, parameters, info } = data;
-      return images[0] as string;
+      return data;
     } catch (error) {
       throw error;
     }

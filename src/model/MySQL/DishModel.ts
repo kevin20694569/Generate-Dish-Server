@@ -4,7 +4,7 @@ import { User, DishPreference, Complexity, Dish } from "./SQLModel";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 class DishModel extends MySQLTableControllerBase {
-  commonSelectString = `CONCAT( "${this.serverIP}/dishimage/", image_id, ".jpg") as image_url`;
+  commonSelectString = `CONCAT( "${this.dishImageServerPrefix}/", image_id) as image_url`;
 
   selectDishByDishID = async (dish_id: string) => {
     try {

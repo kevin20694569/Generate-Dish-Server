@@ -1,5 +1,6 @@
 import mysql from "mysql2/promise";
-abstract class MySQLTableControllerBase {
+import EnvironmentClass from "../../EnvironmentClass";
+abstract class MySQLTableControllerBase extends EnvironmentClass {
   private dbPassword: string = process.env.mysql_dbpassword as string;
   protected serverIP: string = process.env.serverIP as string;
   protected host: string = process.env.mysql_host as string;
@@ -7,6 +8,7 @@ abstract class MySQLTableControllerBase {
   protected mysql_DBName: string = process.env.mysql_dbname as string;
   protected pool: mysql.Pool;
   constructor(password?: string) {
+    super();
     this.dbPassword = process.env.mysql_dbpassword as string;
     if (password) {
       this.dbPassword = password;
