@@ -7,7 +7,7 @@ class UserModel extends MySQLTableControllerBase {
   commonSelectString = `CONCAT( "${this.userImageServerPrefix}/"), image_id) as image_url, NULL AS password`;
   getUserByEmail = async (email: string) => {
     try {
-      let query = `SELECT email, password FROM user WHERE email = ?`;
+      let query = `SELECT * FROM user WHERE email = ?`;
       let params = [email];
       let results: any[];
       let fields: any;

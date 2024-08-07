@@ -3,6 +3,8 @@ import path from "path";
 import ApiRoute from "./routes/ApiRoute";
 import logger from "morgan";
 import cors from "cors";
+import UserController from "./controller/UserController";
+
 let apiRoute = new ApiRoute();
 
 const app = express();
