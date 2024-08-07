@@ -6,7 +6,7 @@ interface User {
   image_id?: string | null;
   created_time?: string;
 }
-interface DishPreference {
+interface Generate_Preference {
   id: string;
   user_id: string;
   quantity: string;
@@ -21,41 +21,60 @@ interface DishPreference {
   created_time?: string;
 }
 
-interface Dish {
+interface Recipe {
   id: string;
-  name: string;
-  cuisine: string;
-  preference_id: string;
-  user_id: string;
-  summary: string;
-  costtime: string;
-  complexity: string;
-  image_id: string;
-  created_time?: string;
-  image_url?: string;
-  imageprompt: string;
-  image_buffer?: string;
-  image_b64_json?: string;
+  title: string;
+  recipe_id: string;
+  image_url: string;
+  url: string;
+  description: string;
+  like_count: number;
+  costtime: number;
+  quantity: number;
+
+  liked?: boolean;
 }
 
-interface DishStep {
-  id: string;
+interface LikeRecipe {
+  user_id: string;
+  recipe_id: string;
+  created_time: string;
+}
+
+class HistoryRecipe {
+  user_id: string;
+  recipe_id: string;
+  generate_preference_id: string;
+  history_order: number;
+  created_time: string | undefined;
+
+  constructor(user_id: string, recipe_id: string, generate_preference_id: string, history_order: number, created_time?: string) {
+    this.user_id = user_id;
+    this.recipe_id = recipe_id;
+    this.generate_preference_id = generate_preference_id;
+    this.history_order = history_order;
+    this.created_time = created_time;
+  }
+}
+
+interface Step {
+  recipe_id: string;
   step_order: number;
   description: string;
-  imageprompt: string;
   image_url?: string;
-  image_id: string;
-  dish_id: string;
-  created_time?: string;
 }
 
 interface Ingredient {
-  id: string;
-  order_index: number;
+  recipe_id: string;
+  ingredient_order: number;
   name: string;
   quantity: string;
-  dish_id: string;
-  created_time?: string;
+}
+
+interface Tag {
+  tag_order: number;
+  title: string;
+  recipe_id: string;
 }
 
 enum Complexity {
@@ -64,4 +83,4 @@ enum Complexity {
   hard = "困難",
 }
 
-export { User, DishPreference, Complexity, Dish, DishStep, Ingredient };
+export { User, Generate_Preference, Complexity, Recipe, Step, Ingredient, Tag, HistoryRecipe, LikeRecipe };

@@ -11,7 +11,7 @@ class DishPreferenceController extends BaseController {
     if (date) {
       dateObject = new Date(date);
     }
-    let preferences = await this.dishPreferenceModel.selectPreferenceByUser_idOrderByTime(user_id, dateObject);
+    let preferences = await this.generatePreferenceModel.selectPreferenceByUser_idOrderByTime(user_id, dateObject);
     res.json(preferences);
     res.end();
   };

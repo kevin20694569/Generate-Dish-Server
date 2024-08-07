@@ -1,18 +1,24 @@
 import UserModel from "../model/MySQL/UserModel";
-import DishPreferenceModel from "../model/MySQL/DishPreferenceModel";
-import DishModel from "../model/MySQL/DishModel";
+import GeneratePreferenceModel from "../model/MySQL/GeneratePreferenceModel";
+import RecipeModel from "../model/MySQL/RecipeModel";
 import StepModel from "../model/MySQL/StepModel";
 import IngredientsModel from "../model/MySQL/IngredientsModel";
 import EnvironmentClass from "../EnvironmentClass";
+import HistoryRecipeModel from "../model/MySQL/HistoryRecipeModel";
+import TagModel from "../model/MySQL/TagModel";
+import LikeRecipeModel from "../model/MySQL/LikeRecipeModel";
+import BrowsedRecipeModel from "../model/MySQL/BrowsedRecipeModel";
+
 abstract class BaseController extends EnvironmentClass {
   protected userModel = new UserModel();
-  protected dishPreferenceModel = new DishPreferenceModel();
-  protected dishModel = new DishModel();
+  protected generatePreferenceModel = new GeneratePreferenceModel();
+  protected recipeModel = new RecipeModel();
   protected stepModel = new StepModel();
   protected ingredientsModel = new IngredientsModel();
-  constructor() {
-    super();
-  }
+  protected historyRecipeModel = new HistoryRecipeModel();
+  protected tagModel = new TagModel();
+  protected likeReicpeModel = new LikeRecipeModel();
+  protected browsedRecipeModel = new BrowsedRecipeModel();
 }
 
 export default BaseController;

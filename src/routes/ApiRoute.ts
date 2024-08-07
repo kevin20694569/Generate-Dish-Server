@@ -2,13 +2,14 @@ import Route from "./Route";
 import RemoteServiceRoute from "./RemoteServiceRoute";
 import UserRoute from "./UserRoute";
 import DishPreferenceRoute from "./DishPreferenceRoute";
-import DishRoute from "./DishRoute";
+import RecipeRoute from "./RecipeRoute";
+import { nextTick } from "process";
 
 class ApiRoute extends Route {
   protected remoteServiceRoute = new RemoteServiceRoute();
   protected userRoute = new UserRoute();
   protected dishPreferenceRoute = new DishPreferenceRoute();
-  protected dishRoute = new DishRoute();
+  private recipeRoute = new RecipeRoute();
 
   protected registerRoute() {
     this.router.use("/remote", (req, res, next) => {
@@ -20,8 +21,8 @@ class ApiRoute extends Route {
     this.router.use("/preferences", (req, res, next) => {
       this.dishPreferenceRoute.router(req, res, next);
     });
-    this.router.use("/dishes", (req, res, next) => {
-      this.dishRoute.router(req, res, next);
+    this.router.use("/recipe", (req, res, next) => {
+      this.recipeRoute.router(req, res, next);
     });
   }
 }

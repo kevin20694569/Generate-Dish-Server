@@ -1,10 +1,10 @@
 import exp from "constants";
 import MySQLTableControllerBase from "./MySQLTableServiceBase";
-import { User, DishPreference, Complexity } from "./SQLModel";
+import { User, Generate_Preference, Complexity } from "./SQLModel";
 import { ResultSetHeader } from "mysql2";
 
 class UserModel extends MySQLTableControllerBase {
-  commonSelectString = `CONCAT( "${this.serverIP}/userimage/"), image_id) as user_imageurl, NULL AS password`;
+  commonSelectString = `CONCAT( "${this.userImageServerPrefix}/"), image_id) as image_url, NULL AS password`;
   getUserByEmail = async (email: string) => {
     try {
       let query = `SELECT email, password FROM user WHERE email = ?`;

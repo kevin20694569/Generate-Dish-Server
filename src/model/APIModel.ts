@@ -7,7 +7,7 @@ interface OpenAiDishJsonResponse {
   cuisine: string;
   summary: string;
   costtime: string;
-  prompt: string;
+
   complexity: string;
   image_url?: string;
   imageprompt: string;

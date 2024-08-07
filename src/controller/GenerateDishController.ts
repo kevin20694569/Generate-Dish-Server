@@ -1,30 +1,37 @@
 import { Request, Response, ErrorRequestHandler, NextFunction } from "express";
 import OpenAI from "openai";
 import GenerateImageController from "./GenerateImageController";
-import { Dish, Complexity, DishPreference, DishStep, Ingredient } from "../model/MySQL/SQLModel";
+import { Recipe, Complexity, Generate_Preference, Step, Ingredient } from "../model/MySQL/SQLModel";
 import { OpenAiDishJsonResponse as OpenAIDishJson } from "../model/APIModel";
 import BaseController from "./BaseController";
 import { nanoid } from "nanoid";
 import MediaController from "./MediaController";
 
+enum GPTModel {
+  gpt4turbo = "gpt-4-turbo-2024-04-09",
+  gpt35 = "gpt-3.5-turbo-1106",
+  gpt4o = "gpt-4o",
+}
+
 class GenerateDishController extends BaseController {
   openAIAPIKey = process.env.openAIAPIKey as string;
+  modelName = GPTModel.gpt35;
   protected openaiClient = new OpenAI({ apiKey: this.openAIAPIKey });
   protected generateImageController = new GenerateImageController();
   protected mediaController = new MediaController();
-  generateDishes = async (req: Request, res: Response, next: NextFunction) => {
+  /*generateDishes = async (req: Request, res: Response, next: NextFunction) => {
     try {
       let {
         ingredients,
         quantity,
         equipments,
-        excludedIngredients,
+
+        excluded_foods,
         cuisine,
         complexity,
         limit,
         temperature,
         timelimit,
-        excludedFoods,
         addictionalText,
         user_id,
         reference_in_history,
@@ -38,7 +45,7 @@ class GenerateDishController extends BaseController {
         preference_id,
         user_id,
         quantity,
-        excludedFoods,
+        excluded_foods,
         reference_in_history,
         complexity,
         addictionalText,
@@ -53,6 +60,7 @@ class GenerateDishController extends BaseController {
       let quantityPrompt: String = "";
       let equipmentsPrompt: String = "";
       let excludedIngredientsPrompt: String = "";
+      let excludedFoodsPrompt: String = "";
       let excludedPrompt: String = "";
       let cuisinePrompt: String = "";
       let complexityPrompt: String = "";
@@ -62,8 +70,9 @@ class GenerateDishController extends BaseController {
       if (equipments != "") {
         equipmentsPrompt = `, 設備有${equipments}`;
       }
-      if (excludedIngredients != "") {
-        excludedIngredientsPrompt = `, 不得使用${excludedIngredients}做為食材`;
+
+      if (excluded_foods != "") {
+        excludedFoodsPrompt = `, 不得與${excluded_foods}等菜色相似`;
       }
       if (cuisine != "") {
         cuisinePrompt = `, 菜式為${cuisine}`;
@@ -71,10 +80,7 @@ class GenerateDishController extends BaseController {
       if (complexity != "") {
         complexityPrompt = `, 烹飪難度為${complexity}`;
       }
-      if (excludedFoods != "") {
-        excludedPrompt = `, 不得與${excludedFoods}等菜色類似`;
-      }
-      let userContent = `利用剩下的食材做菜, 請推薦${limit}道菜餚, 擁有${ingredients}${equipmentsPrompt}${cuisinePrompt}${excludedPrompt}${complexityPrompt}${addictionalText}`;
+      let userContent = `利用剩下的食材做菜, 請推薦${limit}道菜餚, 擁有${ingredients}${equipmentsPrompt}${excluded_foods}${cuisinePrompt}${excludedPrompt}${complexityPrompt}${addictionalText}`;
       let messages: Array<OpenAI.ChatCompletionMessageParam> = [
         {
           role: "system",
@@ -82,7 +88,7 @@ class GenerateDishController extends BaseController {
         },
         { role: "user", content: userContent },
       ];
-      let model = "gpt-3.5-turbo-1106";
+
       let jsonReq = {
         name: "dishResult",
         description: "對菜色分類",
@@ -121,7 +127,7 @@ class GenerateDishController extends BaseController {
                     description: "菜色複雜度",
                   },
                 },
-                required: ["name", "summary", "imageprompt", "costtime", "cuisine", "complexity"],
+                required: ["name", "cuisine", "summary", "costtime", "imageprompt", "complexity"],
               },
             },
           },
@@ -130,9 +136,9 @@ class GenerateDishController extends BaseController {
       };
       let functions = [jsonReq];
       const response = await this.openaiClient.chat.completions.create({
-        model: model,
+        model: this.modelName,
         messages: messages,
-        max_tokens: 512,
+        max_tokens: 1024,
         temperature: temperature,
         functions: functions,
         function_call: "auto",
@@ -164,6 +170,7 @@ class GenerateDishController extends BaseController {
           summary: result.summary,
           costtime: result.costtime,
           complexity: result.complexity,
+          isgenerateddetail: false,
           image_id: dish_id,
           imageprompt: result.imageprompt,
         };
@@ -171,6 +178,7 @@ class GenerateDishController extends BaseController {
       });
       let dishes = await Promise.all(promises);
       await this.dishModel.insertDishes(dishes);
+
       dishes.forEach((dish) => {
         dish.image_url = `${this.dishImageServerPrefix}/${dish.image_id}`;
       });
@@ -191,11 +199,19 @@ class GenerateDishController extends BaseController {
 
       let stepArray = await this.stepModel.selectStepsByDishID(dish_id);
       if (stepArray.length > 0) {
+        let dish = await this.dishModel.selectRecipeByRecipeID(dish_id);
+        let steps = await this.stepModel.selectStepsByDishID(dish_id);
+        let ingredients = await this.ingredientsModel.selectIngredientsByDishID(dish_id);
+        dish["steps"] = steps;
+        dish["ingredients"] = ingredients;
+        res.json({
+          dishes: [dish],
+        });
         throw new Error("此Dish已經生成過Detail");
       }
-      let dishResult = await this.dishModel.selectDishByDishID(dish_id);
+      let dishResult = await this.dishModel.selectRecipeByRecipeID(dish_id);
       let { name, cuisine, preference_id, user_id, created_time, summary, costtime, complexity, image_id } = dishResult;
-      let model = "gpt-3.5-turbo-1106";
+
       let userContent = `我想要做${name}，時間要在${costtime}內，難易度為${complexity}，製作概要為${summary}，生成${maxsteps}步以內的烹飪步驟，製作${quantity}人份`;
       let jsonReq = {
         name: "dishresult",
@@ -252,12 +268,13 @@ class GenerateDishController extends BaseController {
 
       let functions = [jsonReq];
       const response = await this.openaiClient.chat.completions.create({
-        model: model,
+        model: this.modelName,
         messages: messages,
-        max_tokens: 500,
+        max_tokens: 2048,
         functions: functions,
         function_call: "auto",
       });
+
       let choice = response.choices[0];
 
       let choiceMessage = choice.message.function_call?.arguments;
@@ -310,20 +327,23 @@ class GenerateDishController extends BaseController {
       steps.forEach((step) => {
         step.image_url = `${this.stepImageServerPrefix}/${step.id}`;
       });
+      await this.dishModel.updateDishDetailStatus(dish_id, true);
+      dishResult["steps"] = steps;
+      dishResult["ingredients"] = ingredients;
       let jsonObject = {
         created: response["created"],
         usage: response["usage"],
-        steps: steps,
-        needingredients: jsonResults.needingredients,
+        dishes: [dishResult],
       };
-      await this.dishModel.updateDishDetailStatus(dish_id, true);
+
       res.json(jsonObject);
     } catch (error: any) {
       res.status(400);
-      res.json({ err: error.message });
+      console.log(error);
+    } finally {
       res.end();
     }
-  };
+  };*/
 }
 
 export default GenerateDishController;

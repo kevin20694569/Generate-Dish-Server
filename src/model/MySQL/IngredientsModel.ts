@@ -3,7 +3,7 @@ import { Ingredient } from "./SQLModel";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 class IngredientsModel extends MySQLTableControllerBase {
-  insertIngredients = async (ingredients: Ingredient[]): Promise<ResultSetHeader> => {
+  /*insertIngredients = async (ingredients: Ingredient[]): Promise<ResultSetHeader> => {
     try {
       let arrayOfValues = ingredients.map((ingredient) => {
         return Object.values(ingredient);
@@ -17,12 +17,12 @@ class IngredientsModel extends MySQLTableControllerBase {
     } catch (error) {
       throw error;
     }
-  };
+  };*/
 
-  selectIngredientsByDishID = async (dish_id: string) => {
+  selectIngredientsByDishID = async (recipe_id: string) => {
     try {
-      let query = `SELECT * from ingredient WHERE dish_id = ?`;
-      let params = [dish_id];
+      let query = `SELECT * from ingredient WHERE recipe_id = ?`;
+      let params = [recipe_id];
       let [result, fields] = await this.pool.query(query, params);
       return result as RowDataPacket;
     } catch (error) {
@@ -30,10 +30,10 @@ class IngredientsModel extends MySQLTableControllerBase {
     }
   };
 
-  selectIngredientsByDishIDs = async (dish_ids: string[]) => {
+  selectIngredientsByRecipeIDs = async (recipe_ids: string[]) => {
     try {
-      let query = `SELECT * from ingredient WHERE dish_id in (?)`;
-      let params = [dish_ids];
+      let query = `SELECT * from ingredient WHERE recipe_id in (?)`;
+      let params = [recipe_ids];
       let [result, fields] = await this.pool.query(query, params);
       return result as RowDataPacket[];
     } catch (error) {

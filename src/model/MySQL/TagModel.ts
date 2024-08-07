@@ -2,12 +2,12 @@ import MySQLTableControllerBase from "./MySQLTableServiceBase";
 import { Step } from "./SQLModel";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
-class StepModel extends MySQLTableControllerBase {
+class TagModel extends MySQLTableControllerBase {
   //`CONCAT( "${this.stepImageServerPrefix}/", image_id) as image_url`;
   commonSelectString = ``;
-  selectStepsByRecipeID = async (recipe_id: string) => {
+  selectTagsByRecipeID = async (recipe_id: string) => {
     try {
-      let query = `SELECT * from step WHERE recipe_id = ? ORDER BY step_order`;
+      let query = `SELECT * from tag WHERE recipe_id = ? ORDER BY tag_order`;
       let params = [recipe_id];
       let [RowDataPacket, fields] = await this.pool.query(query, params);
       return RowDataPacket as RowDataPacket;
@@ -32,9 +32,9 @@ class StepModel extends MySQLTableControllerBase {
     }
   };*/
 
-  selectStepsByRecipeIDs = async (recipe_ids: string[]) => {
+  selectTagsByRecipeIDs = async (recipe_ids: string[]) => {
     try {
-      let query = `SELECT * from step WHERE recipe_id in (?) ORDER BY recipe_id, step_order`;
+      let query = `SELECT * from tag WHERE recipe_id in (?) ORDER BY recipe_id, tag_order`;
       let params = [recipe_ids];
       let [RowDataPacket, fields] = await this.pool.query(query, params);
       return RowDataPacket as RowDataPacket[];
@@ -44,4 +44,4 @@ class StepModel extends MySQLTableControllerBase {
   };
 }
 
-export default StepModel;
+export default TagModel;
