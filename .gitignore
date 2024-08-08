@@ -6,3 +6,5 @@ production.env
 .env
 README.md
 loophole
+*.pem
+.pem
