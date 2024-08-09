@@ -6,13 +6,27 @@ import BaseController from "./BaseController";
 import { User } from "../model/MySQL/SQLModel";
 import multer from "multer";
 import MediaController from "./MediaController";
-import { error } from "console";
-import { privateEncrypt } from "crypto";
 
 class UserController extends BaseController {
   private key = process.env.jwtKey as string;
   protected mediaController = new MediaController();
   private multer = multer();
+
+  getUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let { user_id } = req.query;
+      user_id = user_id as string;
+      let result = await this.userModel.getUserByID(user_id);
+      res.send(result);
+    } catch (err) {
+      res.status(400);
+      console.log(err);
+      res.send(err);
+    } finally {
+      res.end();
+    }
+  };
+
   login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email, password } = req.body;
@@ -93,6 +107,49 @@ class UserController extends BaseController {
     });
   };
 
+  updateUserPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      let { user_id, password } = req.body;
+      const hashPassword = await this.hashPassword(password);
+
+      let header = await this.userModel.updateUserProfile(user_id, undefined, undefined, hashPassword);
+      if (header.serverStatus != 2) {
+        throw new Error("update user profile error");
+      }
+      res.send({ message: "update user password success" });
+    } catch (error) {
+      res.status(400);
+      res.send(error);
+      console.log(error);
+    } finally {
+      res.end();
+    }
+  };
+
+  updateUserProfile = (req: Request, res: Response, next: NextFunction) => {
+    multer().single("userimage")(req, res, async (next) => {
+      try {
+        let image_id = null;
+        if (req.file) {
+          image_id = nanoid();
+          await this.mediaController.uploadUserImageToS3(req.file.buffer, image_id);
+        }
+        let { user_id, name, email } = req.body;
+        let header = await this.userModel.updateUserProfile(user_id, name, email, image_id);
+        if (header.serverStatus != 2) {
+          throw new Error("update user profile error");
+        }
+        res.send({ message: "update user profile success" });
+      } catch (error) {
+        res.status(400);
+        res.send(error);
+        console.log(error);
+      } finally {
+        res.end();
+      }
+    });
+  };
+
   verifyJwtToken = (req: Request, res: Response, next: NextFunction) => {
     let token = req.headers.authorization;
     try {
@@ -105,19 +162,26 @@ class UserController extends BaseController {
         if (err) {
           throw err;
         }
+        req.user = { email: data.email, user_id: data.user_id };
         next();
       });
-
-      return;
     } catch (err) {
       res.status(401);
-      res.send({ message: "jwt-token fail" });
+      res.send({ message: `jwt-token fail : ${err}` });
       res.end();
     }
   };
 
   async hashPassword(password: string): Promise<string> {
     return await bcrypt.hash(password, 10);
+  }
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { email: string; user_id: string };
+    }
   }
 }
 
