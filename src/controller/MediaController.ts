@@ -2,7 +2,14 @@ import BaseController from "./BaseController";
 import fs from "fs";
 import path from "path";
 //import AWS from "aws-sdk";
-import { S3Client, PutObjectCommand, ObjectCannedACL, PutObjectCommandOutput } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  ObjectCannedACL,
+  PutObjectCommandOutput,
+  DeleteObjectCommand,
+  DeleteBucketCommandOutput,
+} from "@aws-sdk/client-s3";
 import { buffer } from "stream/consumers";
 
 interface UploadedFile {
@@ -61,30 +68,14 @@ class MediaController extends BaseController {
     });
   };
 
-  uploadDishImageToS3 = async (buffer: Buffer, fileName: string): Promise<void> => {
+  uploadImageToS3 = async (buffer: Buffer, fileFolder: S3Folder, fileName: string): Promise<string> => {
+    let key = `${fileFolder}/${fileName}`;
     const input = {
-      ACL: ObjectCannedACL.public_read, // 檔案權限
-      Bucket: `${this.BUCKET_NAME}`, // 相簿位子
-      Key: `dish-image/${fileName}`, // 你希望儲存在 S3 上的檔案名稱
-      Body: buffer, // 檔案
-      ContentType: "image/jpeg", // 副檔名
-    };
-    const command: PutObjectCommand = new PutObjectCommand(input);
-    try {
-      const response = await this.s3Client.send(command);
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  uploadRecognizedImageToS3 = async (buffer: Buffer, fileName: string): Promise<string> => {
-    let key = `recognized-image/${fileName}`;
-    const input = {
-      ACL: ObjectCannedACL.public_read, // 檔案權限
-      Bucket: `${this.BUCKET_NAME}`, // 相簿位子
-      Key: key, // 你希望儲存在 S3 上的檔案名稱
-      Body: buffer, // 檔案
-      ContentType: "image/jpeg", // 副檔名
+      ACL: ObjectCannedACL.public_read,
+      Bucket: `${this.BUCKET_NAME}`,
+      Key: key,
+      Body: buffer,
+      ContentType: "image/jpeg",
     };
     const command: PutObjectCommand = new PutObjectCommand(input);
     try {
@@ -94,33 +85,20 @@ class MediaController extends BaseController {
       throw error;
     }
   };
-  uploadStepImageToS3 = async (buffer: Buffer, fileName: string): Promise<void> => {
-    const input = {
-      ACL: ObjectCannedACL.public_read, // 檔案權限
-      Bucket: `${this.BUCKET_NAME}`, // 相簿位子
-      Key: `step-image/${fileName}`, // 你希望儲存在 S3 上的檔案名稱
-      Body: buffer, // 檔案
-      ContentType: "image/jpeg", // 副檔名
-    };
-    const command: PutObjectCommand = new PutObjectCommand(input);
-    try {
-      const response = await this.s3Client.send(command);
-    } catch (error) {
-      throw error;
-    }
-  };
 
-  uploadUserImageToS3 = async (buffer: Buffer, fileName: string): Promise<void> => {
+  deleteImageFromS3 = async (fileFolder: S3Folder, fileName: string): Promise<string> => {
+    let key = `${fileFolder}/${fileName}`;
     const input = {
-      ACL: ObjectCannedACL.public_read, // 檔案權限
-      Bucket: `${this.BUCKET_NAME}`, // 相簿位子
-      Key: `user-image/${fileName}`, // 你希望儲存在 S3 上的檔案名稱
-      Body: buffer, // 檔案
-      ContentType: "image/jpeg", // 副檔名
+      ACL: ObjectCannedACL.public_read,
+      Bucket: `${this.BUCKET_NAME}`,
+      Key: key,
+      Body: buffer,
+      ContentType: "image/jpeg",
     };
-    const command: PutObjectCommand = new PutObjectCommand(input);
+    const command: DeleteObjectCommand = new DeleteObjectCommand(input);
     try {
-      const response = await this.s3Client.send(command);
+      const response: DeleteBucketCommandOutput = await this.s3Client.send(command);
+      return `${this.imageServerPrefix}/${key}`;
     } catch (error) {
       throw error;
     }
@@ -131,5 +109,11 @@ class MediaController extends BaseController {
     return buffer;
   };
 }
+enum S3Folder {
+  user_image = "user-image",
+  dish_image = "dish-image",
+  step_image = "step-image",
+  recognized_image = "recognized-image",
+}
 
-export default MediaController;
+export { MediaController, S3Folder };

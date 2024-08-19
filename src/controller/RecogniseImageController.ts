@@ -2,7 +2,7 @@ import { Request, Response, ErrorRequestHandler, NextFunction } from "express";
 import OpenAI from "openai";
 import { ImageObject } from "../model/APIModel";
 import axios from "axios";
-import MediaController from "./MediaController";
+import { MediaController, S3Folder } from "./MediaController";
 import BaseController from "./BaseController";
 import multer from "multer";
 import { Multer } from "multer";
@@ -51,7 +51,7 @@ class RecogniseImageController extends BaseController {
       }
       let uploadPromises = files.map(async (file, index) => {
         const file_id = nanoid();
-        return this.mediaController.uploadRecognizedImageToS3(file.buffer, file_id);
+        return this.mediaController.uploadImageToS3(file.buffer, S3Folder.recognized_image, file_id);
       });
       let uploadResults: string[] = await Promise.all(uploadPromises);
 

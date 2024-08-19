@@ -103,7 +103,6 @@ class RecipeModel extends MySQLTableControllerBase {
       VALUES ?`;
       let params = [arrayOfValues];
       let [header, fields] = await this.pool.query(query, params);
-      console.log(header);
       return header as ResultSetHeader;
     } catch (error) {
       throw error;

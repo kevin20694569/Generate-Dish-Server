@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 import BaseController from "./BaseController";
 import { User } from "../model/MySQL/SQLModel";
 import multer from "multer";
-import MediaController from "./MediaController";
+import { MediaController, S3Folder } from "./MediaController";
 
 class UserController extends BaseController {
   private key = process.env.jwtKey as string;
@@ -39,6 +39,7 @@ class UserController extends BaseController {
         };
         const expiresIn = "1h";
         const token = jwt.sign(payload, this.key, { expiresIn });
+
         res.setHeader("jwt-token", token);
         res.status(200);
         let user_result = {
@@ -46,7 +47,7 @@ class UserController extends BaseController {
           name: user["name"],
           image_id: user["image_id"],
           created_time: user["created_time"],
-          user_id: user["id"],
+          id: user["id"],
         };
         res.send({
           message: "登入成功",
@@ -78,7 +79,7 @@ class UserController extends BaseController {
         const file = req.file;
         if (file) {
           userimageid = nanoid();
-          await this.mediaController.uploadUserImage(file.buffer, userimageid);
+          await this.mediaController.uploadImageToS3(file.buffer, S3Folder.user_image, userimageid);
         }
         const hashPassword = await this.hashPassword(password);
         let user_id = nanoid();
@@ -130,11 +131,16 @@ class UserController extends BaseController {
     multer().single("userimage")(req, res, async (next) => {
       try {
         let image_id = null;
+        let { user_id, name, email } = req.body;
         if (req.file) {
           image_id = nanoid();
-          await this.mediaController.uploadUserImageToS3(req.file.buffer, image_id);
+          let user = await this.userModel.getUserByID(user_id);
+          let old_image_id = user.image_id;
+          let uploadPromise = this.mediaController.uploadImageToS3(req.file.buffer, S3Folder.user_image, image_id);
+          let deletePromise = this.mediaController.deleteImageFromS3(S3Folder.user_image, old_image_id);
+          await Promise.all([uploadPromise, deletePromise]);
         }
-        let { user_id, name, email } = req.body;
+
         let header = await this.userModel.updateUserProfile(user_id, name, email, image_id);
         if (header.serverStatus != 2) {
           throw new Error("update user profile error");

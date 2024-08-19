@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import path from "path";
 import https from "https";
+import http from "http";
 import fs from "fs";
 dotenv.config();
 if (process.env.NODE_ENV == "development") {
@@ -17,7 +18,8 @@ import app from "../app";
 
 const port = process.env.PORT;
 app.set("port", port);
-const server = https.createServer(credentials, app);
+//const server = https.createServer(credentials, app);
+const server = http.createServer(app);
 
 server.listen(port, () => {
   console.log(`server is listening on ${port} !!!`);

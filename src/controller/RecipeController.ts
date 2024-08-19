@@ -4,31 +4,13 @@ import axios, { AxiosRequestConfig, formToJSON } from "axios";
 import { Recipe, Ingredient } from "../model/MySQL/SQLModel";
 import { nanoid } from "nanoid";
 class RecipeController extends BaseController {
-  /* selectRecipe = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      let dish_id = req.params.id;
-      const dishPromise = this.dishModel.selectRecipeByRecipeID(dish_id);
-      const ingredientsPromise = this.ingredientsModel.selectIngredientsByDishID(dish_id);
-      const stepsPromise = this.stepModel.sele(dish_id);
-      const [dish, ingredients, steps] = await Promise.all([dishPromise, ingredientsPromise, stepsPromise]);
-      let json = {
-        dish: dish,
-        steps: steps,
-        ingredients: ingredients,
-      };
-      res.json(json);
-    } catch (error: any) {
-      res.send({ error: error.message });
-    } finally {
-      res.end();
-    }
-  };*/
-
   selectRecipesByPreferenceID = async (req: Request, res: Response, next: NextFunction) => {
     try {
       let { preference_id } = req.query;
       preference_id = preference_id as string;
+      console.log(preference_id);
       let recipes = await this.recipeModel.selectRecipesByPreferenceID(preference_id);
+
       await this.mergeRecipeLikeStatus(recipes);
       let mergedResults = await this.mergeRecipeDetail(recipes);
 
@@ -48,21 +30,7 @@ class RecipeController extends BaseController {
         throw new Error("沒有指定食材");
       }
       let preference_id = nanoid();
-      let header = await this.generatePreferenceModel.insertDishPreference(
-        preference_id,
-        user_id,
-        ingredients,
-        equipments,
-        cuisine,
-        complexity,
-        timelimit,
-        temperature,
-        addictionalText
-      );
 
-      if (header.serverStatus != 2) {
-        throw new Error("insertDishPreference Fail");
-      }
       let url = this.recommend_recipe_url_prefix + "/recipe";
       let params = {
         user_id: user_id,
@@ -78,12 +46,27 @@ class RecipeController extends BaseController {
       let response = await axios.post(url, params);
 
       let { results } = response.data;
+
       let recipesPromise = this.recipeModel.selectRecipesByRecipeIDs(results);
       let preferencePromise = this.generatePreferenceModel.selectPreferenceByID(preference_id);
 
       let [recipes, preference] = await Promise.all([recipesPromise, preferencePromise]);
-
       await this.historyRecipeModel.insertHistoryRecipes(user_id, preference_id, recipes);
+      let header = await this.generatePreferenceModel.insertDishPreference(
+        preference_id,
+        user_id,
+        ingredients,
+        equipments,
+        cuisine,
+        complexity,
+        timelimit,
+        temperature,
+        addictionalText
+      );
+      if (header.serverStatus != 2) {
+        throw new Error("insertDishPreference Fail");
+      }
+
       await this.mergeRecipeLikeStatus(recipes);
       let mergedResults = await this.mergeRecipeDetail(recipes);
 
@@ -91,6 +74,7 @@ class RecipeController extends BaseController {
         preference: preference,
         recipes: mergedResults,
       };
+
       res.json(json);
     } catch (error) {
       res.status(400);
@@ -178,6 +162,7 @@ class RecipeController extends BaseController {
       }
 
       let recipes = await this.browsedRecipeModel.selectHistoryBrowsedRecipeByUserID(user_id, date);
+
       await this.mergeRecipeLikeStatus(recipes);
       let mergedResults = await this.mergeRecipeDetail(recipes);
       let json = {
@@ -240,6 +225,9 @@ class RecipeController extends BaseController {
   };
 
   mergeRecipeLikeStatus = async (recipes: any[]) => {
+    if (recipes.length == 0) {
+      return;
+    }
     let ids = recipes.map((recipe) => {
       return recipe.id;
     });

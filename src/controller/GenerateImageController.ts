@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import BaseController from "./BaseController";
 import axios from "axios";
 import { Request, Response, NextFunction } from "express";
-import MediaController from "./MediaController";
+import { MediaController } from "./MediaController";
 import { nanoid } from "nanoid";
 
 class GenerateImageController extends BaseController {

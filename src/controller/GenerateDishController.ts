@@ -5,7 +5,7 @@ import { Recipe, Complexity, Generate_Preference, Step, Ingredient } from "../mo
 import { OpenAiDishJsonResponse as OpenAIDishJson } from "../model/APIModel";
 import BaseController from "./BaseController";
 import { nanoid } from "nanoid";
-import MediaController from "./MediaController";
+import { MediaController } from "./MediaController";
 
 enum GPTModel {
   gpt4turbo = "gpt-4-turbo-2024-04-09",
