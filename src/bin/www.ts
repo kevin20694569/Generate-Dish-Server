@@ -7,6 +7,9 @@ dotenv.config();
 if (process.env.NODE_ENV == "development") {
   dotenv.config({ path: path.resolve(__dirname, "../../" + `${process.env.NODE_ENV}.env`) });
 }
+if (process.env.NODE_ENV == "docker") {
+  dotenv.config({ path: path.resolve(__dirname, "../../" + `${process.env.NODE_ENV}.env`) });
+}
 const prikey = fs.readFileSync(path.resolve(__dirname, "../../util/.pem/key.pem"), "utf8");
 const cert = fs.readFileSync(path.resolve(__dirname, "../../util/.pem/ca.pem"), "utf8");
 const credentials = {

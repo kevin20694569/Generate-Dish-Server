@@ -1,13 +1,12 @@
-FROM node:14-alpine
+FROM node
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY .env ./
 COPY src ./src
-COPY .gitignore ./
-COPY Dockerfile ./
+COPY util ./util
 RUN npm install
 RUN npm run build
-EXPOSE 4000
+EXPOSE 8080
 
 CMD ["node", "./dist/bin/www"]

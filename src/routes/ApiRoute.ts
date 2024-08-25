@@ -15,7 +15,7 @@ class ApiRoute extends Route {
     this.router.use("/users", (req, res, next) => {
       this.userRoute.router(req, res, next);
     });
-    this.router.use("/", this.userController.verifyJwtToken);
+    this.router.use("/", this.userController.jwtTokenMiddleWare);
     this.router.use("/remote", (req, res, next) => {
       this.remoteServiceRoute.router(req, res, next);
     });

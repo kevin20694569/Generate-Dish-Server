@@ -48,11 +48,7 @@ class RecipeController extends BaseController {
       let { results } = response.data;
 
       let recipesPromise = this.recipeModel.selectRecipesByRecipeIDs(results);
-      let preferencePromise = this.generatePreferenceModel.selectPreferenceByID(preference_id);
-
-      let [recipes, preference] = await Promise.all([recipesPromise, preferencePromise]);
-      await this.historyRecipeModel.insertHistoryRecipes(user_id, preference_id, recipes);
-      let header = await this.generatePreferenceModel.insertDishPreference(
+      let insertPreferencePromise = this.generatePreferenceModel.insertDishPreference(
         preference_id,
         user_id,
         ingredients,
@@ -63,8 +59,17 @@ class RecipeController extends BaseController {
         temperature,
         addictionalText
       );
+
+      let [recipes, header] = await Promise.all([recipesPromise, insertPreferencePromise]);
       if (header.serverStatus != 2) {
         throw new Error("insertDishPreference Fail");
+      }
+      let preferencePromise = this.generatePreferenceModel.selectPreferenceByID(preference_id);
+      let insertHistoryRecipesPromise = this.historyRecipeModel.insertHistoryRecipes(user_id, preference_id, recipes);
+
+      let [preference, insertHistoryPreferenceHeader] = await Promise.all([preferencePromise, insertHistoryRecipesPromise]);
+      if (insertHistoryPreferenceHeader.serverStatus != 2) {
+        throw new Error("insertHistoryPreferenceHeader Fail");
       }
 
       await this.mergeRecipeLikeStatus(recipes);

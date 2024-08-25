@@ -20,6 +20,7 @@ class GeneratePreferenceModel extends MySQLTableControllerBase {
     try {
       let query = `SELECT * from generate_preference WHERE user_id = ? AND created_time < ? ORDER BY created_time DESC LIMIT 8`;
       let params = [user_id, date];
+
       let [result, fields] = await this.pool.query(query, params);
       let preferences = result as RowDataPacket[];
       return preferences;

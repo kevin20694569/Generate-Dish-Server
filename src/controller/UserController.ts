@@ -6,6 +6,7 @@ import BaseController from "./BaseController";
 import { User } from "../model/MySQL/SQLModel";
 import multer from "multer";
 import { MediaController, S3Folder } from "./MediaController";
+import { rootCertificates } from "tls";
 
 class UserController extends BaseController {
   private key = process.env.jwtKey as string;
@@ -31,17 +32,11 @@ class UserController extends BaseController {
     try {
       const { email, password } = req.body;
       let user = await this.userModel.getUserByEmail(email);
-
       if (await bcrypt.compare(password, user.password)) {
-        const payload = {
-          email: user["email"],
-          user_id: user["id"],
-        };
-        const expiresIn = "1h";
-        const token = jwt.sign(payload, this.key, { expiresIn });
-
+        let token = this.generateJwtToken(email, user["id"]);
         res.setHeader("jwt-token", token);
         res.status(200);
+
         let user_result = {
           email: user["email"],
           name: user["name"],
@@ -156,25 +151,53 @@ class UserController extends BaseController {
     });
   };
 
-  verifyJwtToken = (req: Request, res: Response, next: NextFunction) => {
+  jwtTokenMiddleWare = async (req: Request, res: Response, next: NextFunction) => {
     let token = req.headers.authorization;
     try {
-      if (token == undefined || token == null) {
+      if (token == undefined || token == null || token == "") {
         throw new Error("token is null");
       }
       token = token.split(" ")[1];
 
-      jwt.verify(token, this.key, (err, data: any) => {
-        if (err) {
-          throw err;
-        }
-        req.user = { email: data.email, user_id: data.user_id };
-        next();
-      });
+      let { newToken, user } = await this.verifyJwtToken(token);
+      res.setHeader("jwt-token", newToken);
+
+      req.user = user;
+      next();
     } catch (err) {
       res.status(401);
       res.send({ message: `jwt-token fail : ${err}` });
       res.end();
+    }
+  };
+
+  generateJwtToken = (email: string, user_id: string) => {
+    const payload = {
+      email: email,
+      user_id: user_id,
+    };
+    //200 days
+    const expiresIn = "7 days";
+    const token = jwt.sign(payload, this.key, { expiresIn });
+    return token;
+  };
+
+  verifyJwtToken = async (token: string): Promise<any> => {
+    try {
+      let { newToken, user } = await new Promise<any>((resolve, reject) => {
+        jwt.verify(token, this.key, (err, data: any) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          let { email, user_id } = data;
+          let token = this.generateJwtToken(email, user_id);
+          resolve({ newToken: token, user: data });
+        });
+      });
+      return { newToken: newToken, user: user };
+    } catch (error) {
+      throw error;
     }
   };
 

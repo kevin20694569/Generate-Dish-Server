@@ -37,7 +37,7 @@ class LikeRecipeModel extends MySQLTableControllerBase {
                   WHERE li.user_id = ?
                   AND li.created_time < ?
                   ORDER BY li.created_time DESC
-                  LIMIT 20`;
+                  LIMIT 12`;
       let params = [user_id, dateThreshold];
       let [results, fields] = await this.pool.query(query, params);
 

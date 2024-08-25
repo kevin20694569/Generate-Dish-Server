@@ -41,7 +41,7 @@ class GenerateImageController extends BaseController {
     let data = await this.generateImageBySD(dishname, description);
     let buffer = this.mediaController.convertBase64ToBuffer(data);
     let dish_id = nanoid();
-    await this.mediaController.uploadDishImage(buffer, dish_id);
+    // await this.mediaController.uploadDishImage(buffer, dish_id);
     res.end();
   };
 
