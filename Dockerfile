@@ -1,4 +1,4 @@
-FROM node
+FROM node:22.5
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
@@ -7,6 +7,6 @@ COPY src ./src
 COPY util ./util
 RUN npm install
 RUN npm run build
-EXPOSE 8080
+EXPOSE 80
 
 CMD ["node", "./dist/bin/www"]

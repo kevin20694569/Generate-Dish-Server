@@ -7,7 +7,7 @@ class TagModel extends MySQLTableControllerBase {
   commonSelectString = ``;
   selectTagsByRecipeID = async (recipe_id: string) => {
     try {
-      let query = `SELECT * from tag WHERE recipe_id = ? ORDER BY tag_order`;
+      let query = `SELECT * from tag WHERE recipe_id = ? ORDER BY order`;
       let params = [recipe_id];
       let [RowDataPacket, fields] = await this.pool.query(query, params);
       return RowDataPacket as RowDataPacket;
@@ -34,7 +34,7 @@ class TagModel extends MySQLTableControllerBase {
 
   selectTagsByRecipeIDs = async (recipe_ids: string[]) => {
     try {
-      let query = `SELECT * from tag WHERE recipe_id in (?) ORDER BY recipe_id, tag_order`;
+      let query = `SELECT * from tag WHERE recipe_id in (?) ORDER BY recipe_id, "order"`;
       let params = [recipe_ids];
       let [RowDataPacket, fields] = await this.pool.query(query, params);
       return RowDataPacket as RowDataPacket[];

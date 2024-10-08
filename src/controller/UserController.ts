@@ -157,6 +157,7 @@ class UserController extends BaseController {
       if (token == undefined || token == null || token == "") {
         throw new Error("token is null");
       }
+
       token = token.split(" ")[1];
 
       let { newToken, user } = await this.verifyJwtToken(token);

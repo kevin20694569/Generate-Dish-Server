@@ -36,15 +36,15 @@ class GeneratePreferenceModel extends MySQLTableControllerBase {
     equipments: string,
     // excluded_ingredients: string,
     cuisine: string,
-    complexity: string,
-    timelimit: number,
-    temperature: number,
+    //complexity: string,
+    //timelimit: number,
+    //temperature: number,
     addictionalText: string
   ): Promise<ResultSetHeader> => {
     try {
-      let query = `INSERT INTO generate_preference (id, user_id, ingredients, cuisine, complexity, timelimit, equipments, temperature, additional_text)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`;
-      let params = [id, user_id, ingredients, cuisine, complexity, timelimit, equipments, temperature, addictionalText];
+      let query = `INSERT INTO generate_preference (id, user_id, ingredients, cuisine, equipments, additional_text)
+      VALUES (?, ?, ?, ?, ?, ?);`;
+      let params = [id, user_id, ingredients, cuisine, equipments, addictionalText];
       let [header, fields] = await this.pool.query(query, params);
       return header as ResultSetHeader;
     } catch (error) {

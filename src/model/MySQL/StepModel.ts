@@ -7,7 +7,7 @@ class StepModel extends MySQLTableControllerBase {
   commonSelectString = ``;
   selectStepsByRecipeID = async (recipe_id: string) => {
     try {
-      let query = `SELECT * from step WHERE recipe_id = ? ORDER BY step_order`;
+      let query = `SELECT * from step WHERE recipe_id = ? ORDER BY order`;
       let params = [recipe_id];
       let [RowDataPacket, fields] = await this.pool.query(query, params);
       return RowDataPacket as RowDataPacket;
@@ -34,7 +34,7 @@ class StepModel extends MySQLTableControllerBase {
 
   selectStepsByRecipeIDs = async (recipe_ids: string[]) => {
     try {
-      let query = `SELECT * from step WHERE recipe_id in (?) ORDER BY recipe_id, step_order`;
+      let query = `SELECT * from step WHERE recipe_id in (?) ORDER BY recipe_id, "order"`;
       let params = [recipe_ids];
       let [RowDataPacket, fields] = await this.pool.query(query, params);
       return RowDataPacket as RowDataPacket[];

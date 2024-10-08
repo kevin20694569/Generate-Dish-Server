@@ -59,20 +59,20 @@ class HistoryRecipe {
 
 interface Step {
   recipe_id: string;
-  step_order: number;
+  order: number;
   description: string;
   image_url?: string;
 }
 
 interface Ingredient {
   recipe_id: string;
-  ingredient_order: number;
+  order: number;
   name: string;
   quantity: string;
 }
 
 interface Tag {
-  tag_order: number;
+  order: number;
   title: string;
   recipe_id: string;
 }

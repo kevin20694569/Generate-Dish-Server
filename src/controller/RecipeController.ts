@@ -8,7 +8,6 @@ class RecipeController extends BaseController {
     try {
       let { preference_id } = req.query;
       preference_id = preference_id as string;
-      console.log(preference_id);
       let recipes = await this.recipeModel.selectRecipesByPreferenceID(preference_id);
 
       await this.mergeRecipeLikeStatus(recipes);
@@ -25,7 +24,7 @@ class RecipeController extends BaseController {
 
   getRecommendRecipes = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      let { user_id, ingredients, equipments, cuisine, complexity, timelimit, temperature, addictionalText } = req.body;
+      let { user_id, ingredients, equipments, cuisine, addictionalText } = req.body;
       if (!ingredients) {
         throw new Error("沒有指定食材");
       }
@@ -37,9 +36,6 @@ class RecipeController extends BaseController {
         ingredients: ingredients,
         equipments: equipments,
         cuisine: cuisine,
-        complexity: complexity,
-        timelimit: timelimit,
-        temperature: temperature,
         addictionalText: addictionalText,
       };
 
@@ -54,9 +50,6 @@ class RecipeController extends BaseController {
         ingredients,
         equipments,
         cuisine,
-        complexity,
-        timelimit,
-        temperature,
         addictionalText
       );
 

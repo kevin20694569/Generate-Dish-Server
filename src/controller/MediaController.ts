@@ -1,7 +1,5 @@
 import BaseController from "./BaseController";
-import fs from "fs";
-import path from "path";
-//import AWS from "aws-sdk";
+
 import {
   S3Client,
   PutObjectCommand,

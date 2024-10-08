@@ -1,21 +1,16 @@
 import { Request, Response, ErrorRequestHandler, NextFunction } from "express";
 import OpenAI from "openai";
-import { ImageObject } from "../model/APIModel";
 import axios from "axios";
 import { MediaController, S3Folder } from "./MediaController";
 import BaseController from "./BaseController";
 import multer from "multer";
 import { Multer } from "multer";
-import { error } from "console";
-import { rejects } from "assert";
-import { resolve } from "path";
 import { nanoid } from "nanoid";
-import { url } from "inspector";
-import { Url } from "url";
+
 const { InterceptorConfigurationError, Responder, ClarifaiStub, grpc } = require("clarifai-nodejs-grpc");
-type InterceptorConfigurationError = typeof InterceptorConfigurationError;
-type Responder = typeof Responder;
-type ClarifaiStub = typeof ClarifaiStub;
+//type InterceptorConfigurationError = typeof InterceptorConfigurationError;
+//type Responder = typeof Responder;
+//type ClarifaiStub = typeof ClarifaiStub;
 let openAIAPIKey = process.env.openAIAPIKey as string;
 class RecogniseImageController extends BaseController {
   multer: Multer = multer({
@@ -31,6 +26,7 @@ class RecogniseImageController extends BaseController {
       }
     },
   });
+
   openAIAPIKey = process.env.openAIAPIKey as string;
   roboflow_api_key = process.env.roboflow_api_key as string;
   clarifaiStub_PAT = process.env.ClarifaiStub_PAT as string;
@@ -40,29 +36,35 @@ class RecogniseImageController extends BaseController {
   recognizeImages = async (req: Request, res: Response, next: NextFunction) => {
     const { user_id } = req.body;
     this.multer.any()(req, res, async (err) => {
-      if (err) {
-        next(err);
+      try {
+        if (err) {
+          throw err;
+        }
+
+        const files = req.files as Express.Multer.File[];
+
+        if (files == undefined) {
+          throw new Error("no files");
+        }
+        let uploadPromises = files.map(async (file, index) => {
+          const file_id = nanoid();
+          return this.mediaController.uploadImageToS3(file.buffer, S3Folder.recognized_image, file_id);
+        });
+        let uploadResults: string[] = await Promise.all(uploadPromises);
+
+        let promises = uploadResults.map((url, index) => {
+          return this.recognise_by_clarifai(index, url);
+        });
+
+        let results = await Promise.all(promises);
+
+        res.json({ results: results });
+      } catch (err: any) {
+        res.status(500);
+        res.send({ message: err });
+      } finally {
+        res.end();
       }
-      const { user_id } = req.body;
-
-      const files = req.files as Express.Multer.File[];
-      if (files == undefined) {
-        rejects(err);
-      }
-      let uploadPromises = files.map(async (file, index) => {
-        const file_id = nanoid();
-        return this.mediaController.uploadImageToS3(file.buffer, S3Folder.recognized_image, file_id);
-      });
-      let uploadResults: string[] = await Promise.all(uploadPromises);
-
-      let promises = uploadResults.map((url, index) => {
-        return this.recognise_by_clarifai(index, url);
-      });
-
-      let results = await Promise.all(promises);
-
-      res.json({ results: results });
-      res.end();
     });
   };
 
@@ -111,7 +113,7 @@ class RecogniseImageController extends BaseController {
             inputs: [{ data: { image: { url: image_URL, allow_duplicate_url: true } } }],
           },
           metadata,
-          (err: InterceptorConfigurationError, response: typeof Responder) => {
+          (err: any, response: any) => {
             if (err) {
               throw reject(err);
             }
