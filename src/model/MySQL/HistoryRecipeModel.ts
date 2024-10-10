@@ -31,6 +31,18 @@ class HistoryRecipeModel extends MySQLTableControllerBase {
       throw error;
     }
   };
+
+  deleteHistoryRecipesByPreferenceID = async (preference_id: string) => {
+    try {
+      let query = `DELETE FROM history_recipe WHERE generate_preference_id = ?;`;
+      let params = [preference_id];
+      let [result, fields] = await this.pool.query(query, params);
+      let preferences = result as RowDataPacket[];
+      return preferences[0];
+    } catch (error) {
+      throw error;
+    }
+  };
 }
 
 export default HistoryRecipeModel;

@@ -23,12 +23,12 @@ class RecipeController extends BaseController {
   };
 
   getRecommendRecipes = async (req: Request, res: Response, next: NextFunction) => {
+    let preference_id = nanoid();
     try {
       let { user_id, ingredients, equipments, cuisine, addictionalText } = req.body;
       if (!ingredients) {
         throw new Error("沒有指定食材");
       }
-      let preference_id = nanoid();
 
       let url = this.recommend_recipe_url_prefix + "/recipe";
       let params = {
@@ -40,6 +40,9 @@ class RecipeController extends BaseController {
       };
 
       let response = await axios.post(url, params);
+      if (response.status != 200) {
+        throw new Error("推薦食譜出現問題");
+      }
 
       let { results } = response.data;
 
@@ -61,6 +64,7 @@ class RecipeController extends BaseController {
       let insertHistoryRecipesPromise = this.historyRecipeModel.insertHistoryRecipes(user_id, preference_id, recipes);
 
       let [preference, insertHistoryPreferenceHeader] = await Promise.all([preferencePromise, insertHistoryRecipesPromise]);
+
       if (insertHistoryPreferenceHeader.serverStatus != 2) {
         throw new Error("insertHistoryPreferenceHeader Fail");
       }
@@ -75,6 +79,8 @@ class RecipeController extends BaseController {
 
       res.json(json);
     } catch (error) {
+      await this.historyRecipeModel.deleteHistoryRecipesByPreferenceID(preference_id);
+      res.json({ message: "推薦食譜發生錯誤" });
       res.status(400);
       console.log(error);
     } finally {
